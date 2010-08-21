@@ -4,6 +4,7 @@
   (:use :cl)
   (:export #:with-arrays
 	   #:vec
+	   #:vec-float
 	   #:make-vec
 	   #:v
 	   #:v.

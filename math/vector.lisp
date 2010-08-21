@@ -1,6 +1,7 @@
-#.(require :vector)
 (in-package :vector)
+
 (declaim (optimize (speed 2) (safety 3) (debug 3)))
+
 #+nil(declaim (optimize (speed 3) (safety 0) (debug 0)))
 
 (deftype vec-float-helper ()
