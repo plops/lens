@@ -32,7 +32,10 @@
 
 
 (defun v. (a b)
+  (declare (vec a b)
+	   (values vec-float &optional))
   (let ((sum +zero+))
+    (declare (vec-float sum))
     (with-arrays (a b)
       (dotimes (i 3)
 	(incf sum (* (a i) (b i)))))
@@ -41,8 +44,9 @@
 #+nil
 (v. (v 1 2 3) (v 2 3 4))
 
+
 (defmacro def-v-op (op)
-  `(defun ,(format-symbol "V~a" op) (a b)
+  `(defun ,(alexandria:format-symbol nil "V~a" op) (a b)
      (declare (vec a b)
 	      (values vec &optional))
      (let ((result (v)))
@@ -56,3 +60,16 @@
 
 #+nil
 (v- (v) (v 1 2 3))
+
+(defun v* (scalar v)
+  (declare (vec-float scalar)
+	   (vec v)
+	   (values vec &optional))
+  (let ((result v))
+    (with-arrays (result v)
+      (dotimes (i 3)
+	(setf (result i) (* scalar (v i)))))
+    result))
+
+#+nil
+(v* 2.0 (v 1 2 3))

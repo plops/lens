@@ -9,5 +9,3 @@ so that (ARRAY ...) corresponds to (AREF ARRAY ...)."
      ,@body))
 
 
-(defmacro format-symbol (fmt &rest rest)
-  `(intern (string-upcase (format nil ,fmt ,@rest))))
