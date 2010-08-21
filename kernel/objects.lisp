@@ -31,3 +31,11 @@
    (bfp-radius :accessor bfp-radius :initarg :bfp-radius
 		:initform (alexandria:required-argument)
 		:type vec-float)))
+
+(defclass ray ()
+  ((start :accessor start :initarg :start
+	  :initform (alexandria:required-argument)
+	  :type vec)
+   (direction :accessor direction :initarg :direction
+	  :initform (alexandria:required-argument)
+	  :type vec)))
