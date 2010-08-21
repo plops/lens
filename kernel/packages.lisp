@@ -13,4 +13,10 @@
 	   #:objective
 	   #:immersion-index
 	   #:numerical-aperture
-	   #:bfp-radius))
+	   #:bfp-radius
+	   #:ray
+	   #:start
+	   #:direction
+	   #:ray-lost
+	   #:intersect
+	   #:refract))

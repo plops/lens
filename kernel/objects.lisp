@@ -39,3 +39,10 @@
    (direction :accessor direction :initarg :direction
 	  :initform (alexandria:required-argument)
 	  :type vec)))
+
+(defmethod print-object ((ray ray) stream)
+  (with-slots (start direction) ray
+   (format stream "#<ray start: ~a dir: ~a>" start direction)))
+
+#+nil
+(make-instance 'ray :start (v) :direction (v))
