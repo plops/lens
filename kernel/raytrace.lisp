@@ -128,16 +128,54 @@ NA) is missed then the condition LOST-RAY is signalled."
 	       (sinu-max (/ numerical-aperture immersion-index)))
 	  (when (<= sinu2 (* sinu-max sinu-max)) ;; angle to steep
 	    (signal 'ray-lost))
-	  (make-instance 'ray :direction ro :start (v+ s intersection)))))))
+	  (make-instance 'ray
+			 :direction ro 
+			 :start (v+ s intersection)))))))
 #+nil
-(refract (make-instance 'ray 
-			:direction (v 0 0 -1)
-			:start (v 0 1 10))
-	 (make-instance 'objective 
-			:bfp-radius 4.0
-			:numerical-aperture 1.38
-			:lens-radius 8.0
-			:immersion-index 1.515
-			:focal-length 2.3
-			:center (v)
-			:normal (v 0 0 -1)))
+(handler-case 
+    (refract (make-instance 'ray 
+			    :direction (v 0 0 -1)
+			    :start (v 0 .0 10))
+	     (make-instance 'objective 
+			    :bfp-radius 4.6
+			    :numerical-aperture 1.38
+			    :lens-radius 8.0
+			    :immersion-index 1.515
+			    :focal-length 2.3
+			    :center (v)
+			    :normal (v 0 0 -1)))
+#+nil  (ray-lost () nil))
+
+;;   sketch of the mirror for incoming parallel light
+;;   --------------------+-----------------------
+;; 		      /|\
+;; 		     / | \
+;; 		    / n|  \	       N=n*(- (p.n))
+;; 		q  /   |   \  p	       p+N=r
+;; 	          /    v    \	       q=N+r
+;; 	         /           \
+;; 	        /      |      \	       q=p-2(p.n)*n
+;; 	       /       |       \
+;; 	      /       N|        \
+;; 	     /         |         \
+;; 	    /          |     r    \
+;; 	   /   	       v<----------\
+;; p .. ray-direction
+;; N .. mirror-normal
+
+(defgeneric reflect (ray object))
+
+(defmethod reflect ((ray ray) (mirror mirror))
+  "Return reflected ray If the ray isn't inside of the radius return
+signal RAY-LOST."
+  (declare (values ray &optional))
+  (with-slots (start direction) ray
+   (with-slots (center normal radius) mirror
+     (assert (< (abs (- 1 (norm normal))) 1e-12))
+     (assert (< (abs (- 1 (norm direction))) 1e-12))
+     (let ((intersection (intersect ray mirror)))
+       (when (< (norm (v- intersection center)) radius)
+	 (signal 'ray-lost))
+       (let ((dir (v+ direction (v* (* +one+ -2 (v. direction normal))
+					normal))))
+	 (make-instance 'ray :start intersection :direction dir))))))

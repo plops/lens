@@ -16,4 +16,6 @@
 	   #:normalize
 	   #:mat
 	   #:rotation-matrix
-	   #:m*))
+	   #:m*
+	   #:+zero+
+	   #:+one+))

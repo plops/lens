@@ -19,4 +19,5 @@
 	   #:direction
 	   #:ray-lost
 	   #:intersect
-	   #:refract))
+	   #:refract
+	   #:reflect))
