@@ -1,4 +1,3 @@
-#.(require :optics)
 (in-package :optics)
 
 (defgeneric intersect (ray object))

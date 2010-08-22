@@ -4,4 +4,6 @@
   ((:module "kernel"
 	    :serial t
 	    :components ((:file "packages")
-			 (:file "objects")))))
+			 (:file "objects")
+			 (:file "raytrace")
+			 (:file "helpers")))))
