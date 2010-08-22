@@ -21,7 +21,7 @@
     (* focal-length numerical-aperture)))
 
 #+nil
-(back-focal-plane-radius 2.61 1.38)
+(back-focal-plane-radius (make-objective))
 
 (defun focal-length-from-magnification (mag)
   (declare (vec-float mag)

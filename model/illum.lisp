@@ -21,7 +21,8 @@
 	   (fixnum number-of-leds)
 	   (values vec-float vec-float &optional))
   ;; all leds should fit into full galvo range because. the mirror has
-  ;; a deflection range of 20 degrees
+  ;; a deflection range of +/- 20 degrees, so the leds can be
+  ;; distributed over 80 degree
   (let ((uu (/ (* 4 galvo-half-angle) number-of-leds))) 
     (values (magnification-from-angles led-half-angle
 				       uu)
@@ -30,7 +31,7 @@
 #+nil
 (led-magnification-to-fit-in-galvo-interval
  (led-half-angle-to-achieve-etendue
-  .5 (oil-objective-etendue .07)))
+  .5 (oil-objective-etendue (make-objective) .07)))
 
 ;; 		 |
 ;; 	         +--\
@@ -45,13 +46,14 @@
 ;;
 ;; 1/f=1/b+1/g
 ;; M=yy/y, yy/b=y/g -> M=b/g
-(declaim (ftype (function (double-float double-float &optional double-float)
-	                  (values double-float double-float
-				  double-float &optional))
-		 magnifier-focal-length-from-its-radius))
-(defun magnifier-focal-length-from-its-radius (u M &optional (radius 12.5d0))
+
+(defun magnifier-focal-length-from-its-radius (u M &optional
+					       (radius #.(* +one+ 12.5)))
   "M is the magnification of the lens behind the LED. u is the half
 angle of LED flux that is meant to be captured by the lens."
+  (declare  ((vec-float 0 #.(* 2 pi)) u)
+	    (vec-float M radius)
+	   (values vec-float vec-float vec-float &optional))
   (let* ((g (/ radius (tan u)))
 	 (b (* M g))
 	 (f (/ (+ (/ g) (/ b)))))
@@ -59,9 +61,9 @@ angle of LED flux that is meant to be captured by the lens."
 
 #+nil
 (let* ((u (led-half-angle-to-achieve-etendue
-	   .5d0 (oil-objective-etendue .07d0)))
+	   .5 (oil-objective-etendue (make-objective) .07)))
        (M (led-magnification-to-fit-in-galvo-interval u)))
   (format nil "~a" (list u M
 			 (multiple-value-list
 			  (magnifier-focal-length-from-its-radius
-			   u M 11.655d0)))))
+			   u M 11.655)))))
