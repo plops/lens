@@ -22,6 +22,8 @@
 		 :type vec-float)))
 
 (defclass objective (lens)
+  ;; set the lens-radius to something bigger (maybe twice bfp-radius)
+  ;; to prevent spurious RAY-LOST when dispatching to lens refract
   ((immersion-index :accessor immersion-index :initarg :immersion-index
 		    :initform (alexandria:required-argument)
 		    :type vec-float)

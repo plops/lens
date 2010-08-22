@@ -48,9 +48,9 @@
 
 (defmethod refract ((ray ray) (lens lens))
   "Return new ray after refraction on thin lens. In general you will
-have to normalize the result. The refraction on an objective needs the
-non-normalized result. When the ray doesn't hit the lens the condition
-RAY-LOST is signalled."
+have to normalize its direction. The refraction on an objective needs
+the non-normalized result. When the ray doesn't hit the lens the
+condition RAY-LOST is signalled."
   (declare (values ray &optional))
   (with-slots (start direction) ray
     (with-slots (center normal focal-length lens-radius) lens
@@ -96,52 +96,48 @@ RAY-LOST is signalled."
 ;;             +--------------------
 ;;             |                 /
 
-(declaim (ftype (function (thin-objective 
-			    vec vec)
-			  (values (or null vec) vec &optional))
-		thin-objective-ray))
 ;; 2008 Hwang Simulation of an oil immersion objective lens...
 (defmethod refract ((ray ray) (objective objective))
-  "Returns direction of outgoing ray. Call INTERSECT to find the starting point of the outgoing ray  If the principle sphere isn't
-hit inside the maximum angle (given by NA) or the back focal plane
-isn't hit inside its radius, then the condition LOST-RAY is
-singalled."
-  (with-slots (center normal focal-length 
-		      radius ;; bfp-radius
-		      immersion-index numerical-aperture)
-      objective
-    (unless (< (abs (- 1 (norm normal))) 1d-12)
-      (error "lens normal doesn't have unit length"))
-   (unless (< (abs (- 1 (norm ray-direction))) 1d-12)
-     (error "ray-direction doesn't have unit length"))
- 
-   (multiple-value-bind (r intersection)
-       (lens-ray objective 
-		 ray-start ray-direction :normalize nil)
-     (unless r 
-       (return-from thin-objective-ray (values nil intersection)))
-     (let* ((a (v* normal (* focal-length (- immersion-index 1))))
-	    (ru (v+ r a))
-	    (rho (v- intersection center))
-	    (rho2 (v. rho rho))
-	    (nf (* immersion-index focal-length))
-	    (nf2 (* nf nf))
-	    (rat (- nf2 rho2)))
-       (unless (<= 0d0 rat)
-	 (return-from thin-objective-ray (values nil intersection))
-	 #+nil	(error "ray can't pass through objective"))
-       (let* ((s (v* ray-direction (- nf (sqrt rat))))
-	      (ro (v- ru s))
-	      (cosu (v. ro normal))
-	      (sinu2 (- 1 (* cosu cosu)))
-	      (sinu-max (/ numerical-aperture immersion-index)))
-	 (unless (<= sinu2 (* sinu-max sinu-max))
-	   (return-from thin-objective-ray (values nil intersection)))
-	 (values ro (v+ s intersection)))))))
-
+  "Returns the refracted ray with the starting point on the principle
+sphere of the objective. If the cap of the principal sphere (given by
+NA) is missed then the condition LOST-RAY is signalled."
+  (declare (values ray &optional))
+  (with-slots (start direction) ray
+    (with-slots (center normal focal-length 
+			lens-radius bfp-radius
+			immersion-index numerical-aperture) objective
+      (assert (< (abs (- 1 (norm normal))) 1e-12))
+      (assert (< (abs (- 1 (norm direction))) 1e-12))
+      ;; call refract for lens and refine the result
+      (let* ((lens-ray (call-next-method ray objective))
+	     (r (direction lens-ray))
+	     (intersection (start lens-ray))
+	     (a (v* (* focal-length (- immersion-index 1)) normal))
+	     (ru (v+ r a))
+	     (rho (v- intersection center))
+	     (rho2 (v. rho rho))
+	     (nf (* immersion-index focal-length))
+	     (nf2 (* nf nf))
+	     (rat (- nf2 rho2)))
+	(when (<= 0d0 rat) ;; ray doesn't hit principal sphere
+	  (signal 'ray-lost))
+	(let* ((s (v* (- nf (sqrt rat)) direction))
+	       (ro (v- ru s))
+	       (cosu (v. ro normal))
+	       (sinu2 (- 1 (* cosu cosu)))
+	       (sinu-max (/ numerical-aperture immersion-index)))
+	  (when (<= sinu2 (* sinu-max sinu-max)) ;; angle to steep
+	    (signal 'ray-lost))
+	  (make-instance 'ray :direction ro :start (v+ s intersection)))))))
 #+nil
-(thin-objective-ray (v 0d0 0d0 0d0)
-		    (v 0d0 0d0 -1d0)
-		    2.3d0 1.515d0
-		    (v 0d0 1d0 10d0)
-		    (normalize (v 0d0 0d0 -1d0)))
+(refract (make-instance 'ray 
+			:direction (v 0 0 -1)
+			:start (v 0 1 10))
+	 (make-instance 'objective 
+			:bfp-radius 4.0
+			:numerical-aperture 1.38
+			:lens-radius 8.0
+			:immersion-index 1.515
+			:focal-length 2.3
+			:center (v)
+			:normal (v 0 0 -1)))
