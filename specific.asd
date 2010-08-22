@@ -1,6 +1,6 @@
 (asdf:defsystem specific
   :depends-on (:alexandria :vector :optics)
   :components
-  ((:module "model"
+  ((:module "specific"
 	    :serial t
 	    :components ((:file "packages")))))

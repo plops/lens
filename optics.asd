@@ -1,7 +1,7 @@
 (asdf:defsystem optics
   :depends-on (:alexandria :vector)
   :components
-  ((:module "kernel"
+  ((:module "optics"
 	    :serial t
 	    :components ((:file "packages")
 			 (:file "objects")

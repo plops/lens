@@ -1,7 +1,7 @@
 (asdf:defsystem vector
   :depends-on (:alexandria)
   :components
-  ((:module "math"
+  ((:module "vector"
 	    :serial t
 	    :components ((:file "packages")
 			 (:file "macros")
