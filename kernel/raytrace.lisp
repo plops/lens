@@ -165,7 +165,7 @@ NA) is missed then the condition LOST-RAY is signalled."
 (defgeneric reflect (ray object))
 
 (defmethod reflect ((ray ray) (mirror mirror))
-  "Return reflected ray If the ray isn't inside of the radius return
+  "Return reflected ray. If the ray isn't inside of the radius return
 signal RAY-LOST."
   (declare (values ray &optional))
   (with-slots (start direction) ray
@@ -177,4 +177,14 @@ signal RAY-LOST."
 	 (signal 'ray-lost))
        (let ((dir (v+ direction (v* (* +one+ -2 (v. direction normal))
 					normal))))
-	 (make-instance 'ray :start intersection :direction dir))))))
+	 (make-instance 'ray 
+			:start intersection 
+			:direction (normalize dir)))))))
+
+#+nil
+(reflect 
+ (make-instance 'ray :start (v 0 0 10)
+		:direction (v 0 0 -1))
+ (make-instance 'mirror :radius 1.0
+		:center (v)
+		:normal (v 0 0 1)))
