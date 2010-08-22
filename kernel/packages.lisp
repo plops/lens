@@ -20,4 +20,14 @@
 	   #:ray-lost
 	   #:intersect
 	   #:refract
-	   #:reflect))
+	   #:reflect
+	   #:lambert-random
+	   #:lambert-direction
+	   #:back-focal-plane-radius
+	   #:focal-length-from-magnification
+	   #:grad->rad
+	   #:rad->grad
+	   #:etendue
+	   #:oil-objective-etendue
+	   #:magnification-from-angles
+	   #:make-objective))

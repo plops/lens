@@ -34,6 +34,11 @@
 		:initform (alexandria:required-argument)
 		:type vec-float)))
 
+(defmethod print-object ((objective objective) stream)
+  (with-slots (immersion-index numerical-aperture focal-length) objective
+   (format stream "#<objective f: ~2,2f na: ~f index: ~f>" focal-length
+	   numerical-aperture immersion-index)))
+
 (defclass ray ()
   ((start :accessor start :initarg :start
 	  :initform (alexandria:required-argument)

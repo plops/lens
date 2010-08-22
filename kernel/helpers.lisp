@@ -15,10 +15,10 @@
 ;;             nf       |
 ;; 
 ;; sin(alpha) = R/nf
-(defun back-focal-plane-radius (focal-length numerical-aperture)
-  (declare (vec-float focal-length numerical-aperture)
-	   (values vec-float &optional))
-  (* focal-length numerical-aperture))
+(defmethod back-focal-plane-radius ((objective objective))
+  (declare (values vec-float &optional))
+  (with-slots (focal-length numerical-aperture) objective
+    (* focal-length numerical-aperture)))
 
 #+nil
 (back-focal-plane-radius 2.61 1.38)
@@ -30,11 +30,43 @@
 #+nil
 (focal-length-from-magnification 63.0)
 
+(defun make-objective (&key (magnification #.(* +one+ 63))
+		       (numerical-aperture #.(* +one+ 1.38))
+		       (immersion-index #.(* +one+ 1.515))
+		       (center (v))
+		       (normal (v 0 0 1)))
+  (let* ((o (make-instance 'objective 
+			   :bfp-radius +one+ ;; these need to be generated
+			   :focal-length +one+
+			   :lens-radius +one+
+			   :numerical-aperture numerical-aperture
+			   :immersion-index immersion-index
+			   :center center
+			   :normal normal))
+	 (bfp-radius (back-focal-plane-radius o))
+	 (f (focal-length-from-magnification magnification)))
+    (make-instance 'objective 
+		   :bfp-radius bfp-radius
+		   :focal-length f
+		   :lens-radius (* 10 bfp-radius)
+		   :numerical-aperture numerical-aperture
+		   :immersion-index immersion-index
+		   :center center
+		   :normal normal)))
+#+nil
+(make-objective)
+
 (defun grad->rad (grad)
   (declare (real grad)
 	   (values vec-float &optional))
   (* #.(coerce (/ pi 180) 'vec-float)
      (coerce grad 'vec-float)))
+
+(defun rad->grad (rad)
+  (declare (real rad)
+	   (values vec-float &optional))
+  (* #.(coerce (/ 180 pi) 'vec-float)
+     (coerce rad 'vec-float)))
 
 (defun etendue (chief-height marginal-angle
 		&optional
@@ -49,19 +81,18 @@
 #+nil
 (etendue .07 (grad->rad 67) 1.515)
 
-(defun oil-objective-etendue (field-radius &optional 
-			      (numerical-aperture #.(* +one+ 1.38))
-			      (refractive-index #.(* +one+ 1.515)))
-  (declare (vec-float field-radius numerical-aperture refractive-index)
+(defmethod oil-objective-etendue ((objective objective) field-radius)
+  (declare (vec-float field-radius)
 	   (values vec-float &optional))
-  (let ((rat (/ numerical-aperture refractive-index)))
-    (unless (<= (abs rat) 1)
-      (error "impossible angle, check numerical aperture and refractive index."))
-    (let* ((marginal-angle (asin rat)))
-      (etendue field-radius marginal-angle refractive-index))))
+  (with-slots (numerical-aperture immersion-index) objective
+   (let ((rat (/ numerical-aperture immersion-index)))
+     (unless (<= (abs rat) 1)
+       (error "impossible angle, check numerical aperture and refractive index."))
+     (let* ((marginal-angle (asin rat)))
+       (etendue field-radius marginal-angle immersion-index)))))
 
 #+nil
-(oil-objective-etendue .07)
+(oil-objective-etendue (make-objective) .07)
 
 (defun magnification-from-angles (u uu &optional (n +one+) (nn +one+))
   "u is the objects marginal ray angle and uu for the image."
