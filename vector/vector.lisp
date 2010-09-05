@@ -5,10 +5,10 @@
 #+nil(declaim (optimize (speed 3) (safety 0) (debug 0)))
 
 (deftype vec-float-helper ()
-  `single-float)
+  `double-float)
 
 (deftype vec-float (&optional (low '*) (high '*))
-  `(single-float ,(if (eq low '*)
+  `(double-float ,(if (eq low '*)
 		      '*
 		      (coerce low 'vec-float-helper)) 
 		 ,(if (eq high '*)

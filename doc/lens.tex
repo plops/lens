@@ -1,0 +1,23 @@
+\documentclass[columns=2]{scrartcl}
+\usepackage{units}
+\title{Simple Raytracer in Common Lisp}
+\author{Martin Kielhorn}
+\begin{document}
+\maketitle
+\section{Introduction}
+We want to design a device consisting of multiple light diodes that
+are fired in sequence. LEDs can deliver more light when run in a
+pulsed mode. So in principle it should be possible to obtain higher
+brightness inside the field of view of a microobjective.
+
+Our optical setup consists of several lenses to reimage the light
+emitting area into the back focal plane of the objective and one
+movable mirror. The light emitted from the diode is assumed to be
+lambert distributed. In order to find good focal length ratios and the
+diameters of the lenses the optical system is simulated by raytracing
+(neglecting aberrations).
+
+The raytracer consists of several distinct modules whose function and
+implementation will be described in this document.
+
+\end{document}
