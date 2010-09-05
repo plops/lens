@@ -85,11 +85,47 @@ lens-radius of an objective isn't important and should be set to 10
 times bfp-radius. A ray consists of a start position and a direction
 vector. In general the direction of a ray should have length one.
 \subsection{Raytrace}
-The generic methods intersect, refract and reflect do the obvious
-calculation between a ray and another object resulting in a new
-ray. If the ray doesn't pass through an aperture or hits an objective
-in a too steep angle the condition ray-lost is signalled. All methods
-check that directions are unit vectors. Note that the resulting
-direction of raytrace on a lens isn't normalized.
- 
+The generic methods intersect, refract and reflect take a ray and an
+object as parameters and return a new ray. If the ray doesn't pass
+through an aperture or hits an objective in a too steep angle the
+condition ray-lost is signalled. All methods check that directions are
+unit vectors. Note that the resulting direction of raytrace on a lens
+isn't normalized.
+\subsection{Light source}
+The function lambert-direction returns a normalized direction vector
+with Lambert-Cosine $\theta$ distribution (elevation) and uniform
+$\phi$ distribution (azimuth).
+\subsection{Helpers}
+The function back-focal-plane-radius returns the radius of the back
+focal plane of a high NA immersion objective. The function
+focal-length-from-magnification can be used to calculate the focal
+length from the given magnification for Zeiss objectives. Both of
+these functions are called from make-objective, which will construct
+an immersion objective from a given NA, magnification and immersion
+index.
+
+The functions grad->rad and rad->grad can be used to convert degree
+into radians and vice versa.
+
+The function etendue calculates the optical invariant if chief and
+marginal ray are known. More useful for our purposes is the more
+specific oil-objective-etendue that calculates the optical invariant
+necessary to illuminate a radius in the focal plane of an immersion
+objective.
+
+The function magnification-from-angles can be used to find the
+magnification of an imaging system given the marginal ray angles on
+object and image side.
+
+\section{Specific functions}
+This module contains specific functions that are needed to construct
+the optical imaging path through the illuminator. The function
+led-half-angle-to-achieve-etendue calculates the angle that needs to
+be captured to fill the full field of view in an objective.
+
+The function led-magnification-to-fit-in-galvo-interval says how much
+the LED angle has to be reduced to fit enough of them inside of the
+range that the movable mirror can cover.
+
+
 \end{document}
