@@ -59,7 +59,7 @@ condition RAY-LOST is signalled."
 	     (rho (v- intersection center)))
 	(format t "~a~%" (norm rho))
 	(when (< lens-radius (norm rho))
-	  (signal 'ray-lost))
+	  (error 'ray-lost))
 	(let* ((cosphi (v. normal direction)))
 	  (make-instance 'ray
 			 :start intersection
@@ -101,35 +101,40 @@ condition RAY-LOST is signalled."
 sphere of the objective. If the cap of the principal sphere (given by
 NA) is missed then the condition LOST-RAY is signalled."
   (declare (values ray &optional))
-  (with-slots (start direction) ray
-    (with-slots (center normal focal-length 
-			lens-radius bfp-radius
-			immersion-index numerical-aperture) objective
+  (with-slots (start (dir direction)) ray
+    (with-slots ((c center)
+		 (n normal)
+		 (f focal-length) 
+		 (rad lens-radius) 
+		 (bfprad bfp-radius)
+		 (ri immersion-index)
+		 (na numerical-aperture)) objective
       (assert (< (abs (- 1 (norm normal))) 1e-12))
       (assert (< (abs (- 1 (norm direction))) 1e-12))
       ;; call refract for lens and refine the result
       (let* ((lens-ray (call-next-method ray objective))
 	     (r (direction lens-ray))
-	     (intersection (start lens-ray))
-	     (a (v* (* focal-length (- immersion-index 1)) normal))
+	     (i (start lens-ray))
+	     (a (v* (* f (- ri 1)) n))
 	     (ru (v+ r a))
-	     (rho (v- intersection center))
+	     (rho (v- i c))
 	     (rho2 (v. rho rho))
-	     (nf (* immersion-index focal-length))
+	     (nf (* ri f))
 	     (nf2 (* nf nf))
 	     (rat (- nf2 rho2)))
 	(when (<= 0d0 rat) ;; ray doesn't hit principal sphere
-	  (signal 'ray-lost))
-	(let* ((s (v* (- nf (sqrt rat)) direction))
+	  (error 'ray-lost))
+	(let* ((s (v* (- nf (sqrt rat)) dir))
 	       (ro (v- ru s))
-	       (cosu (v. ro normal))
+	       (nro (normalize ro))
+	       (cosu (v. nro normal))
 	       (sinu2 (- 1 (* cosu cosu)))
-	       (sinu-max (/ numerical-aperture immersion-index)))
-	  (when (<= sinu2 (* sinu-max sinu-max)) ;; angle to steep
-	    (signal 'ray-lost))
+	       (sinu-max (/ na ri)))
+	  (when (<= (* sinu-max sinu-max) sinu2) ;; angle to steep
+	    (error 'ray-lost))
 	  (make-instance 'ray
-			 :direction ro 
-			 :start (v+ s intersection)))))))
+			 :direction nro 
+			 :start (v+ s i)))))))
 #+nil
 (handler-case 
     (refract (make-instance 'ray 

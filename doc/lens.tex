@@ -1,14 +1,16 @@
-\documentclass[columns=2]{scrartcl}
+\documentclass[twocolumn,DIV20]{scrartcl}
 \usepackage{units}
+\usepackage{verbatim}
 \title{Simple Raytracer in Common Lisp}
 \author{Martin Kielhorn}
+\date{2010-09-05}
 \begin{document}
 \maketitle
 \section{Introduction}
-We want to design a device consisting of multiple light diodes that
-are fired in sequence. LEDs can deliver more light when run in a
-pulsed mode. So in principle it should be possible to obtain higher
-brightness inside the field of view of a microobjective.
+We design a device consisting of multiple light diodes that are fired
+in sequence. LEDs can deliver more light when run in a pulsed mode. So
+in principle it should be possible to obtain higher brightness inside
+the field of view of a microobjective.
 
 Our optical setup consists of several lenses to reimage the light
 emitting area into the back focal plane of the objective and one
@@ -20,4 +22,74 @@ diameters of the lenses the optical system is simulated by raytracing
 The raytracer consists of several distinct modules whose function and
 implementation will be described in this document.
 
+\section{Vector}
+The fundamental datastructure are three-dimensional vectors. In the
+program they are represented as an array with three elements. The type
+of the elements (called vec-float) can be set to either single-float
+or double-float. For the simulation the latter choice is
+endoresed. 
+\subsection{Single or double-float?}
+However, some effort has been put into making it possible
+to switch to single-float at compile time. This effort consists mainly
+of replacing numerical constants like 1d0 with the constant +one+ that
+is automatically set to 1s0 or 1d0 depending on the type vec-float.
+
+A three-dimensional vector can be created with make-vec. This expects
+zero to three arguments and defaults to zero. If all arguments are
+constant numerals a macrocall like \verb!(v 0 2.3)! should be
+used. It coerces the arguments to be of the right type for vec-float,
+obliviating cumbersome calls like \verb!(make-vec :y 2.3d0)!
+(which would only work for double-float) or the even more cumbersome
+notation \verb!(make-vec :y #.(* +one+ 2.3d0))!
+which would enforce conversion to double-float at compile time if
+necessary.
+
+The main motivation to introduce the extra type vec-float is error
+estimation. If running a simulation with single-float gives the same
+result as with double-float we can be quite sure that round-off errors
+are not skewing our result.
+
+\subsection{Operations on vectors}
+Addition v+, subtraction v-, multiplication with scalar (v* scalar v),
+dot product v. and cross product vx are working as expected. The
+euclidean length of a vector is given by norm and the result of the
+function normalize is a unit vector with the same direction as the
+1input vector.
+
+\subsection{Matrix operations}
+The function m takes 9 parameters and creates a new $3\times3$
+matrix. The function \verb!(rotation-matrix angle v)! takes an angle
+in radians and a unit vector and defines the corresponding rotation
+around an axis. The function \verb!(m* m v)! applies a matrix to a
+vector.
+
+\subsection{Macros}
+Sometimes the macro with-arrays (found in Nikodemus' raylisp) is
+handy. It obliviates the need to write aref for function accesses.
+
+\section{Graphical User Interface}
+The macro with-gui opens a window calling the body repeatedly to draw
+the contents. It makes sense to call a function draw inside
+with-gui. Everytime draw is updated from within slime the changes are
+immediately visible on the screen.
+
+\section{Optics}
+This module contains the basic raytracer.
+\subsection{Objects}
+The objects plane, mirror, lens, objective and ray are implemented as
+classes. A plane is defined by a contained point (called center) and a
+normal. A mirror additionally contains a radius and a lens its
+lens-radius and focal-length. An objective is a subclass of length
+augmented with immersion-index, numerical-aperture and bfp-radius. The
+lens-radius of an objective isn't important and should be set to 10
+times bfp-radius. A ray consists of a start position and a direction
+vector. In general the direction of a ray should have length one.
+\subsection{Raytrace}
+The generic methods intersect, refract and reflect do the obvious
+calculation between a ray and another object resulting in a new
+ray. If the ray doesn't pass through an aperture or hits an objective
+in a too steep angle the condition ray-lost is signalled. All methods
+check that directions are unit vectors. Note that the resulting
+direction of raytrace on a lens isn't normalized.
+ 
 \end{document}
